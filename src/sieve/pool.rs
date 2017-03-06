@@ -1,7 +1,7 @@
-use std::sync::mpsc::{SendError, RecvError};
+use std::sync::mpsc::{ SendError, RecvError };
 use std::result::Result;
 use std::vec::Vec;
-use sieve::worker::{new_worker, MsgFromWorker, MsgToWorker};
+use sieve::worker::{new_worker, MsgToWorker};
 use sieve::thread::{Thread, Send, Receive};
 
 pub fn create_pool(no_threads: usize) -> ThreadPool {
@@ -43,7 +43,6 @@ impl PageSieve for ThreadPool {
                         Err(err) => errors.push(ThreadError::RecvError(err)),
                         Ok(_) => {}
                     }
-
             }
 
         }
