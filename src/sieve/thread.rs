@@ -1,5 +1,5 @@
 use std::sync::mpsc::{Sender, Receiver, SendError, RecvError};
-use sieve::worker::{ MsgToWorker, MsgFromWorker };
+use sieve::worker::{MsgToWorker, MsgFromWorker};
 use std::result::Result;
 
 pub type Thread = (Sender<MsgToWorker>, Receiver<MsgFromWorker>);

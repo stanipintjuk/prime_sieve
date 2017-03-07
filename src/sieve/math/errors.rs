@@ -35,4 +35,3 @@ impl From<SystemTimeError> for SieveError {
         SieveError::Time(err)
     }
 }
-

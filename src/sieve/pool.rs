@@ -1,50 +1,55 @@
-use std::sync::mpsc::{ SendError, RecvError };
+use std::sync::mpsc::{SendError, RecvError};
+use std::sync::Arc;
 use std::result::Result;
+use std::option::Option;
 use std::vec::Vec;
-use sieve::worker::{new_worker, MsgToWorker};
+use sieve::worker::{new_worker, MsgToWorker, MsgFromWorker, ArcVec};
 use sieve::thread::{Thread, Send, Receive};
-
-pub fn create_pool(no_threads: usize) -> ThreadPool {
-    let mut threads = Vec::with_capacity(no_threads);
-    for _ in 0..no_threads {
-        threads.push(new_worker());
-    }
-
-    ThreadPool { threads: threads }
-}
+use sieve::math::{best_partitioning, Partition};
 
 pub struct ThreadPool {
     threads: Vec<Thread>,
 }
 
-trait PageSieve {
-    fn find_candidates(self, init_primes: Vec<u64>) -> Vec<u64>;
-    fn sieve(self, prime_page: Vec<u64>, candidates: Vec<u64>) -> Vec<u64>;
-    fn stop(self) -> Result<(), Vec<ThreadError>>;
-}
+impl ThreadPool {
+    pub fn new(no_threads: usize) -> ThreadPool {
+        let mut threads = Vec::with_capacity(no_threads);
+        for _ in 0..no_threads {
+            threads.push(new_worker());
+        }
 
-impl PageSieve for ThreadPool {
-    fn find_candidates(self, init_primes: Vec<u64>) -> Vec<u64> {
-        vec!()
+        ThreadPool { threads: threads }
     }
 
-    fn sieve(self, prime_page: Vec<u64>, candidates: Vec<u64>) -> Vec<u64> {
-        vec!()
+    pub fn find_candidates(&self, init_primes: Vec<u64>) -> Result<Vec<u64>, Vec<ThreadError>> {
+        unimplemented!();
     }
 
-    fn stop(self) -> Result<(), Vec<ThreadError>> {
+    pub fn sieve(&self,
+                 prime_page: Vec<u64>,
+                 candidates: Vec<u64>)
+                 -> Result<Vec<u64>, Vec<ThreadError>> {
+        let partitions = best_partitioning(0, candidates.len(), self.threads.len());
+
+        let threadparts = self.threads.iter().zip(partitions);
+        for (part, thread) in threadparts {}
+
+        unimplemented!();
+    }
+
+    pub fn stop(&self) -> Result<(), Vec<ThreadError>> {
         let mut errors = Vec::new();
-        for thread in self.threads {
+        for thread in &self.threads {
 
             match thread.send(MsgToWorker::Stop) {
                 Err(err) => errors.push(ThreadError::SendError(err)),
-                Ok(_) => 
-                    match thread.recv() {
-                        Err(err) => errors.push(ThreadError::RecvError(err)),
-                        Ok(_) => {}
-                    }
+                Ok(_) => continue,
             }
 
+            match thread.recv() {
+                Err(err) => errors.push(ThreadError::RecvError(err)),
+                Ok(_) => {}
+            }
         }
 
         if errors.len() == 0 {
@@ -55,7 +60,8 @@ impl PageSieve for ThreadPool {
     }
 }
 
-enum ThreadError {
+pub enum ThreadError {
     RecvError(RecvError),
     SendError(SendError<MsgToWorker>),
+    UnexpectedResponse(MsgToWorker, MsgFromWorker),
 }

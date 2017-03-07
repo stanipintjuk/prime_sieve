@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{Result, Read};
-use fs::serializer::{deserialize_buf};
+use fs::serializer::deserialize_buf;
 use config::MAX_MEM_USAGE;
 
 const PAGE_SIZE: usize = MAX_MEM_USAGE;
