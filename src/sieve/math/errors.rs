@@ -5,12 +5,7 @@ pub enum MathError {
     Limit(String),
 }
 
-pub enum SieveLogicError {
-    Limit(String, Vec<u64>),
-}
-
 pub enum ThreadError {
-    Logic(SieveLogicError),
     Recv(RecvError),
 }
 pub enum SieveError {

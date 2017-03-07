@@ -18,31 +18,32 @@ enum SieveError {
 fn sieve_file(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, SieveError> {
     let mut primes_pager = try!(fs::load_primes(fname));
 
-    let init_primes = match primes_pager.next() {
-        Some(primes) => primes,
-        None => return Err(SieveError::PrimesFileEmpty),
-    };
+    if let Some(init_primes) = (&mut primes_pager).next() {
+        let mut candidates = try!(thread_pool.find_candidates(init_primes));
 
-    let mut candidates = try!(thread_pool.find_candidates(init_primes));
+        for page in primes_pager {
+            candidates = try!(thread_pool.sieve(page, candidates));
+        }
 
-    for page in primes_pager {
-        candidates = try!(thread_pool.sieve(page, candidates));
+        Ok(candidates)
+    } else {
+        Err(SieveError::PrimesFileEmpty)
     }
-
-    Ok(candidates)
 }
 
 fn sieve(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, SieveError> {
     match sieve_file(thread_pool, fname) {
         Ok(primes) => Ok(primes),
-        Err(err) => match err {
-            SieveError::IO(ioerr) =>  {
-                match ioerr.kind() {
-                    ErrorKind::NotFound => Ok(math::init_primes()),
-                    err => Err(SieveError::IO(IOError::new(err, ioerr)))
+        Err(err) => {
+            match err {
+                SieveError::IO(ioerr) => {
+                    match ioerr.kind() {
+                        ErrorKind::NotFound => Ok(math::init_primes()),
+                        _ => Err(SieveError::IO(ioerr)),
+                    }
                 }
+                _ => Err(err),
             }
-            err => Err(err)
         }
     }
 }
@@ -59,7 +60,8 @@ fn main() {
                 read_line();
             }
             Err(err) => {
-                println!("{}", err);
+                println!("got some kind of error lol {}", err);
+                break;
             }
         }
     }

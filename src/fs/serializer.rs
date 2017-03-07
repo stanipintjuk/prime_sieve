@@ -1,6 +1,4 @@
-use std::result::Result;
 use std::vec::Vec;
-use fs::errors::DeserializationError;
 
 const SIZE: usize = 8;
 pub fn serialize_u64(num: u64) -> [u8; SIZE] {
@@ -22,20 +20,6 @@ pub fn deserialize_u64(arr: [u8; SIZE]) -> u64 {
         num = num + (arr[i] as u64);
     }
     num
-}
-
-pub fn deserialize_vecu8(vec: Vec<u8>) -> Result<Vec<u64>, DeserializationError> {
-    if vec.len() % 8 == 0 {
-        let chunks = vec.len() / 8;
-        let mut des_vec = Vec::new();
-        for chunk in 0..chunks {
-            des_vec.push(deserialize_chunk(&vec[chunk * 8..chunk * 8 + 8]))
-        }
-        Ok(des_vec)
-    } else {
-        Err(DeserializationError::WrongFileFormat("Number of bytes isn't divisible by 8"
-            .to_string()))
-    }
 }
 
 pub fn deserialize_buf(buf: &[u8], read: usize) -> Vec<u64> {

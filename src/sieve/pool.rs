@@ -1,11 +1,10 @@
 use std::sync::mpsc::{SendError, RecvError};
-use std::sync::Arc;
 use std::result::Result;
-use std::option::Option;
 use std::vec::Vec;
-use sieve::worker::{new_worker, MsgToWorker, MsgFromWorker, ArcVec};
+use sieve::worker::{new_worker, MsgToWorker, MsgFromWorker};
 use sieve::thread::{Thread, Send, Receive};
-use sieve::math::{best_partitioning, Partition};
+use sieve::math;
+use sieve::math::{Partition};
 
 pub struct ThreadPool {
     threads: Vec<Thread>,
@@ -22,6 +21,10 @@ impl ThreadPool {
     }
 
     pub fn find_candidates(&self, init_primes: Vec<u64>) -> Result<Vec<u64>, Vec<ThreadError>> {
+        let &last_prime = init_primes.last().unwrap();
+        let max = math::best_max_for_sieve(last_prime, self.threads.len() as u64);
+        let partitions = math::best_partitioning(last_prime as usize, max as usize, self.threads.len());
+        
         unimplemented!();
     }
 
@@ -29,7 +32,7 @@ impl ThreadPool {
                  prime_page: Vec<u64>,
                  candidates: Vec<u64>)
                  -> Result<Vec<u64>, Vec<ThreadError>> {
-        let partitions = best_partitioning(0, candidates.len(), self.threads.len());
+        let partitions = math::best_partitioning(0, candidates.len(), self.threads.len());
 
         let threadparts = self.threads.iter().zip(partitions);
         for (part, thread) in threadparts {}

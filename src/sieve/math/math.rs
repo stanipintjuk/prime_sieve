@@ -29,13 +29,6 @@ fn is_coprime(n: u64, c: u64) -> bool {
     !(n % c == 0)
 }
 
-pub fn find_next_prime(n: u64, prime_list: &Vec<u64>) -> Result<u64, MathError> {
-    let mut counter = 0u64;
-    while !try!(is_coprime_to_list(counter + n, prime_list)) {
-        counter += 1;
-    }
-    Ok(counter + n)
-}
 
 pub fn find_candidates(init_primes: &Vec<u64>, part: Partition) -> Result<Vec<u64>, MathError> {
     let mut candidates = Vec::new();
@@ -77,6 +70,10 @@ pub fn best_partitioning(from: usize, to: usize, parts: usize) -> Vec<Partition>
         });
     }
     partition
+}
+
+pub fn best_max_for_sieve(prime: u64, threads: u64) -> u64 {
+    unimplemented!();
 }
 
 pub trait CheckedSquare {
