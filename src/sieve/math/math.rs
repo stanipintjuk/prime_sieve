@@ -2,6 +2,10 @@ use std::result::Result;
 use std::u32::MAX as u32MAX;
 use sieve::math::errors::MathError;
 
+pub fn init_primes() -> Vec<u64> {
+    vec![2, 3, 5, 7, 11]
+}
+
 fn is_coprime_to_list(n: u64, list: &Vec<u64>) -> Result<bool, MathError> {
     if n > (u32MAX as u64) {
         let msg = format!("Number '{}' is to big for checking co-primality in an \

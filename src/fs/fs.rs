@@ -1,6 +1,6 @@
-use std::fs::File;
-use std::io::{Result, Read};
-use fs::serializer::deserialize_buf;
+use std::fs::{File, OpenOptions};
+use std::io::{Result, Read, Write};
+use fs::serializer::{deserialize_buf, serialize_u64};
 use config::MAX_MEM_USAGE;
 
 const PAGE_SIZE: usize = MAX_MEM_USAGE;
@@ -32,4 +32,20 @@ pub fn load_primes(file_name: String) -> Result<PrimesPagination> {
         file: file,
         position: 0,
     })
+}
+
+pub fn save_primes(primes: &Vec<u64>, fname: String) -> Result<()> {
+    let fname = &fname;
+    let mut file = match OpenOptions::new()
+        .append(true)
+        .open(fname) {
+        Ok(file) => file,
+        Err(_) => try!(File::create(fname)),
+    };
+
+    for &p in primes {
+        try!(file.write_all(&serialize_u64(p)));
+    }
+
+    Ok(())
 }

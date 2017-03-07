@@ -1,10 +1,10 @@
 mod fs;
 mod sieve;
 mod config;
-use config::{FILE, MAX_MEM_USAGE, CORES};
-use sieve::{ThreadPool, ThreadError, MsgToWorker, MsgFromWorker};
+use config::{FILE, CORES};
+use sieve::{math, ThreadPool, ThreadError, MsgToWorker, MsgFromWorker};
 use std::result::Result;
-use std::io::Error as IOError;
+use std::io::{stdin, Error as IOError, ErrorKind};
 use std::vec::Vec;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::convert::From;
@@ -15,35 +15,61 @@ enum SieveError {
     PrimesFileEmpty,
 }
 
-fn sieve(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, SieveError> {
-    let mut primes = try!(fs::load_primes(fname));
+fn sieve_file(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, SieveError> {
+    let mut primes_pager = try!(fs::load_primes(fname));
 
-    let init_primes = match primes.next() {
+    let init_primes = match primes_pager.next() {
         Some(primes) => primes,
         None => return Err(SieveError::PrimesFileEmpty),
     };
 
     let mut candidates = try!(thread_pool.find_candidates(init_primes));
 
-    for page in primes {
+    for page in primes_pager {
         candidates = try!(thread_pool.sieve(page, candidates));
     }
 
     Ok(candidates)
 }
 
+fn sieve(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, SieveError> {
+    match sieve_file(thread_pool, fname) {
+        Ok(primes) => Ok(primes),
+        Err(err) => match err {
+            SieveError::IO(ioerr) =>  {
+                match ioerr.kind() {
+                    ErrorKind::NotFound => Ok(math::init_primes()),
+                    err => Err(SieveError::IO(IOError::new(err, ioerr)))
+                }
+            }
+            err => Err(err)
+        }
+    }
+}
+
 fn main() {
-    println!("Initializing threadpool...");
     let thread_pool = sieve::ThreadPool::new(CORES);
     loop {
         let sieve_result = sieve(&thread_pool, FILE.to_string());
         match sieve_result {
-            Ok(_) => (),
+            Ok(primes) => {
+                println!("Sieve found primes {:?}", primes);
+                let _ = fs::save_primes(&primes, FILE.to_string());
+                println!("saved");
+                read_line();
+            }
             Err(err) => {
                 println!("{}", err);
-                break;
             }
         }
+    }
+}
+
+pub fn read_line() -> Option<String> {
+    let mut num = String::new();
+    match stdin().read_line(&mut num) {
+        Ok(_) => Some(num),
+        Err(_) => None,
     }
 }
 
