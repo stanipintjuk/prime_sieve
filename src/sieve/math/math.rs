@@ -68,8 +68,17 @@ pub fn best_partitioning(from: usize, to: usize, parts: usize) -> Vec<Option<Par
     partition
 }
 
-pub fn best_max_for_sieve(last_prime: u64, max: u64) -> u64 {
-    unimplemented!();
+pub fn best_max_for_sieve(last_prime: u64, max: u64) -> Result<u64, MathError> {
+    if let Some(theo_limit) = last_prime.checked_square() {
+        if theo_limit <= max {
+            Ok(theo_limit)
+        } else {
+            Ok(max)
+        }
+    } else {
+        Err(MathError::Limit("Could not calculate square of a number becaue of u64 limit!"
+            .to_string()))
+    }
 }
 
 pub trait CheckedSquare {
@@ -85,7 +94,8 @@ impl CheckedSquare for u64 {
 
 #[cfg(test)]
 mod tests {
-    use sieve::math::{Partition, best_partitioning, best_max_for_sieve};
+    use super::{best_partitioning, best_max_for_sieve};
+    use super::super::Partition;
     use std::fmt::Debug;
 
     #[test]
@@ -134,19 +144,19 @@ mod tests {
 
     #[test]
     fn best_max_for_sieve_works_for_2() {
-        let ans = best_max_for_sieve(2, 100);
+        let ans = best_max_for_sieve(2, 100).unwrap();
         assert_eq!(ans, 4)
     }
 
     #[test]
     fn best_max_for_sieve_works_for_trivial() {
-        let ans = best_max_for_sieve(11, 500);
+        let ans = best_max_for_sieve(11, 500).unwrap();
         assert_eq!(ans, 121)
     }
 
     #[test]
     fn best_max_for_sieve_works_for_max() {
-        let ans = best_max_for_sieve(11, 100);
-        assert_eq!(ans, 121)
+        let ans = best_max_for_sieve(11, 100).unwrap();
+        assert_eq!(ans, 100)
     }
 }

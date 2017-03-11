@@ -2,7 +2,7 @@ mod fs;
 mod sieve;
 mod config;
 use config::{FILE, CORES};
-use sieve::{math, ThreadPool, ThreadError};
+use sieve::{math, ThreadPool, ThreadError, ThreadPoolError};
 use std::result::Result;
 use std::io::{stdin, Error as IOError, ErrorKind};
 use std::vec::Vec;
@@ -11,7 +11,7 @@ use std::convert::From;
 
 enum SieveError {
     IO(IOError),
-    Thread(Vec<ThreadError>),
+    Thread(ThreadPoolError),
     PrimesFileEmpty,
 }
 
@@ -83,26 +83,7 @@ impl Display for SieveError {
                        "The primes file was loaded but didn't contain any numbers.")
             }
             &SieveError::IO(ref err) => write!(f, "IO Error: \n\t{}", err),
-            &SieveError::Thread(ref errors) => {
-                let _ = write!(f, "One or more errors occured in the thread pool \n\t");
-                for err in errors {
-                    let _ = match err {
-                        &ThreadError::RecvError(err) => {
-                            write!(f, "Failed to read from a thread. Err: {}", err)
-                        }
-                        &ThreadError::SendError(ref err) => {
-                            write!(f, "Failed to send to a thread. Err: {}", err)
-                        }
-                        &ThreadError::UnexpectedResponse(ref req, ref resp) => {
-                            write!(f,
-                                   "Unexpected response! Thread answered '{}' on request '{}' ",
-                                   req,
-                                   resp)
-                        }
-                    };
-                }
-                write!(f, "\n\t")
-            }
+            &SieveError::Thread(ref error) => write!(f, "Error in thread pool\n\t{}", error),
         }
     }
 }
@@ -113,8 +94,9 @@ impl From<IOError> for SieveError {
     }
 }
 
-impl From<Vec<ThreadError>> for SieveError {
-    fn from(err: Vec<ThreadError>) -> SieveError {
+impl From<ThreadPoolError> for SieveError {
+    fn from(err: ThreadPoolError) -> SieveError {
         SieveError::Thread(err)
     }
 }
+

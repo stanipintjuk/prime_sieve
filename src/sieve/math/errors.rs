@@ -1,4 +1,6 @@
+use std::fmt::{Debug, Formatter, Error as FmtError};
 use std::time::SystemTimeError;
+use std::result::Result;
 use std::sync::mpsc::RecvError;
 
 pub enum MathError {
@@ -28,5 +30,13 @@ impl From<RecvError> for SieveError {
 impl From<SystemTimeError> for SieveError {
     fn from(err: SystemTimeError) -> Self {
         SieveError::Time(err)
+    }
+}
+
+impl Debug for MathError {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            &MathError::Limit(ref msg) => write!(f, "MathError::Limit({})", msg),
+        }
     }
 }
