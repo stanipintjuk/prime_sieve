@@ -1,6 +1,8 @@
 use std::result::Result;
 use std::u32::MAX as u32MAX;
+use std::option::Option;
 use sieve::math::errors::MathError;
+use sieve::math::Partition;
 
 pub fn init_primes() -> Vec<u64> {
     vec![2, 3, 5, 7, 11]
@@ -29,7 +31,6 @@ fn is_coprime(n: u64, c: u64) -> bool {
     !(n % c == 0)
 }
 
-
 pub fn find_candidates(init_primes: &Vec<u64>, part: Partition) -> Result<Vec<u64>, MathError> {
     let mut candidates = Vec::new();
     let to = part.from + part.delta;
@@ -53,21 +54,16 @@ pub fn sieve_page(primes_page: &Vec<u64>, candidates: &Vec<u64>) -> Result<Vec<u
     Ok(sieved)
 }
 
-pub struct Partition {
-    from: usize,
-    delta: usize,
-}
-
-pub fn best_partitioning(from: usize, to: usize, parts: usize) -> Vec<Partition> {
+pub fn best_partitioning(from: usize, to: usize, parts: usize) -> Vec<Option<Partition>> {
     let mut partition = Vec::with_capacity(parts);
     let delta = to - from;
     let size = delta / parts;
     for part in 0..parts {
         let from = from + part * size;
-        partition.push(Partition {
+        partition.push(Some(Partition {
             from: from,
             delta: size,
-        });
+        }));
     }
     partition
 }
@@ -89,10 +85,36 @@ impl CheckedSquare for u64 {
 
 #[cfg(test)]
 mod tests {
+    use sieve::math::{ Partition, best_partitioning };
+
     #[test]
-    fn find_next_prime_works() {
-        let primes = vec![2, 3, 5];
-        assert_eq!(trytest!(find_next_prime(6, &primes)), 7);
-        assert_eq!(trytest!(find_next_prime(5, &primes)), 5);
+    fn best_partitioning_works_for_even() {
+        let ans = best_partitioning(2, 8, 2);
+        let exp = vec![
+            Some(Partition{from:2, delta:3}),
+            Some(Partition{from:5, delta:3})
+        ];
+
+        let ansexp = ans.iter().zip(exp);
+        for (ref ans, ref expected) in ansexp {
+            assert_eq!(ans.unwrap(), expected.unwrap());
+        }
     }
+
+    #[test]
+    fn best_partitioning_works_for_overflow() {
+        let ans = best_partitioning(2, 7, 4);
+        let expected = vec![
+            Some(Partition{from:2, delta:2}),
+            Some(Partition{from:3, delta:2}),
+            Some(Partition{from:3, delta:1}),
+            None
+        ];
+
+        let ansexp = ans.iter().zip(expected);
+        for (ref ans, ref expected) in ansexp {
+            assert_eq!(ans.unwrap(), expected.unwrap());
+        }
+    }
+
 }

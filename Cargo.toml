@@ -1,5 +1,5 @@
 [package]
-name = "pi_primes"
+name = "prime_sieve"
 version = "0.1.0"
 authors = ["stani"]
 
