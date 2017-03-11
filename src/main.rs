@@ -1,8 +1,8 @@
 mod fs;
 mod sieve;
 mod config;
-use config::{FILE, CORES};
-use sieve::{math, ThreadPool, ThreadError, ThreadPoolError};
+use config::{FILE, CORES, MAX_MEM_USAGE};
+use sieve::{math, ThreadPool, ThreadPoolError};
 use std::result::Result;
 use std::io::{stdin, Error as IOError, ErrorKind};
 use std::vec::Vec;
@@ -20,6 +20,8 @@ fn sieve_file(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, Sieve
 
     if let Some(init_primes) = (&mut primes_pager).next() {
         let mut candidates = try!(thread_pool.find_candidates(init_primes));
+
+        println!("Found candidates {:?}", candidates);
 
         for page in primes_pager {
             candidates = try!(thread_pool.sieve(page, candidates));
@@ -49,7 +51,7 @@ fn sieve(thread_pool: &ThreadPool, fname: String) -> Result<Vec<u64>, SieveError
 }
 
 fn main() {
-    let thread_pool = sieve::ThreadPool::new(CORES);
+    let thread_pool = sieve::ThreadPool::new(CORES, MAX_MEM_USAGE / CORES);
     loop {
         let sieve_result = sieve(&thread_pool, FILE.to_string());
         match sieve_result {
@@ -60,7 +62,7 @@ fn main() {
                 read_line();
             }
             Err(err) => {
-                println!("got some kind of error lol {}", err);
+                println!("Error in sieve:\n{}", err);
                 break;
             }
         }

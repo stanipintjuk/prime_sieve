@@ -55,17 +55,32 @@ pub fn sieve_page(primes_page: &Vec<u64>, candidates: &Vec<u64>) -> Result<Vec<u
 }
 
 pub fn best_partitioning(from: usize, to: usize, parts: usize) -> Vec<Option<Partition>> {
-    let mut partition = Vec::with_capacity(parts);
-    let delta = to - from;
-    let size = delta / parts;
+    let mut partitions = Vec::with_capacity(parts);
+
+    let mut distance = to - from;
+    let delta = (distance as f64 / parts as f64).ceil() as usize;
+
     for part in 0..parts {
-        let from = from + part * size;
-        partition.push(Some(Partition {
-            from: from,
-            delta: size,
-        }));
+            let from = from + delta * part;
+
+        if distance == 0 {
+            partitions.push(None);
+        } else if distance < delta {
+            partitions.push(Some(Partition {
+                from: from,
+                delta: distance,
+            }));
+            distance = 0;
+        } else {
+            partitions.push(Some(Partition {
+                from: from,
+                delta: delta,
+            }));
+            distance -= delta;
+        }
     }
-    partition
+
+    partitions
 }
 
 pub fn best_max_for_sieve(last_prime: u64, max: u64) -> Result<u64, MathError> {
@@ -76,8 +91,7 @@ pub fn best_max_for_sieve(last_prime: u64, max: u64) -> Result<u64, MathError> {
             Ok(max)
         }
     } else {
-        Err(MathError::Limit("Could not calculate square of a number becaue of u64 limit!"
-            .to_string()))
+        Err(MathError::Limit("Could not calculate square of a prime!".to_string()))
     }
 }
 
@@ -114,6 +128,23 @@ mod tests {
     }
 
     #[test]
+    fn best_partitioning_works_for_odd()  {
+        let ans = best_partitioning(7, 24, 3);
+        let expected = vec![Some(Partition {
+            from: 7,
+            delta: 6,
+        }), Some(Partition {
+            from: 13,
+            delta: 6,
+        }), Some(Partition {
+            from: 19,
+            delta: 5,
+        }),];
+        
+        assert_vec_eq(ans, expected);
+    }
+
+    #[test]
     fn best_partitioning_works_for_overflow() {
         let ans = best_partitioning(2, 7, 4);
         let expected = vec![Some(Partition {
@@ -121,11 +152,11 @@ mod tests {
                                 delta: 2,
                             }),
                             Some(Partition {
-                                from: 3,
+                                from: 4,
                                 delta: 2,
                             }),
                             Some(Partition {
-                                from: 3,
+                                from: 6,
                                 delta: 1,
                             }),
                             None];
