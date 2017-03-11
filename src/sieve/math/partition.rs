@@ -6,6 +6,20 @@ pub struct Partition {
     pub delta: usize,
 }
 
+impl Clone for Partition {
+    fn clone(&self) -> Self {
+        Partition {
+            from: self.from,
+            delta: self.delta,
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.from = source.from;
+        self.delta = source.delta;
+    }
+}
+
 impl Debug for Partition {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         write!(f, "Partition(from = {}, Δ = {})", self.from, self.delta)

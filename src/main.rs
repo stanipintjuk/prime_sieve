@@ -2,7 +2,7 @@ mod fs;
 mod sieve;
 mod config;
 use config::{FILE, CORES};
-use sieve::{math, ThreadPool, ThreadError, MsgToWorker, MsgFromWorker};
+use sieve::{math, ThreadPool, ThreadError};
 use std::result::Result;
 use std::io::{stdin, Error as IOError, ErrorKind};
 use std::vec::Vec;
@@ -103,27 +103,6 @@ impl Display for SieveError {
                 }
                 write!(f, "\n\t")
             }
-        }
-    }
-}
-
-impl Display for MsgToWorker {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        match self {
-            &MsgToWorker::FindCandidates(_, _) => write!(f, "FindCandidates(...)"),
-            &MsgToWorker::Sieve(_, _) => write!(f, "Sieve(...)"),
-            &MsgToWorker::Stop => write!(f, "Stop"),
-        }
-    }
-}
-
-impl Display for MsgFromWorker {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        match self {
-            &MsgFromWorker::CandidatesResult(_) => write!(f, "CandidatesResult(...)"),
-            &MsgFromWorker::SieveResult(_) => write!(f, "SieveResult(...)"),
-            &MsgFromWorker::Error(_) => write!(f, "Error(...)"),
-            &MsgFromWorker::Ok => write!(f, "Ok"),
         }
     }
 }

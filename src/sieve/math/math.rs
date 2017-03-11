@@ -68,7 +68,7 @@ pub fn best_partitioning(from: usize, to: usize, parts: usize) -> Vec<Option<Par
     partition
 }
 
-pub fn best_max_for_sieve(prime: u64, threads: u64) -> u64 {
+pub fn best_max_for_sieve(last_prime: u64, max: u64) -> u64 {
     unimplemented!();
 }
 
@@ -85,36 +85,68 @@ impl CheckedSquare for u64 {
 
 #[cfg(test)]
 mod tests {
-    use sieve::math::{ Partition, best_partitioning };
+    use sieve::math::{Partition, best_partitioning, best_max_for_sieve};
+    use std::fmt::Debug;
 
     #[test]
     fn best_partitioning_works_for_even() {
         let ans = best_partitioning(2, 8, 2);
-        let exp = vec![
-            Some(Partition{from:2, delta:3}),
-            Some(Partition{from:5, delta:3})
-        ];
+        let expected = vec![Some(Partition {
+                                from: 2,
+                                delta: 3,
+                            }),
+                            Some(Partition {
+                                from: 5,
+                                delta: 3,
+                            })];
 
-        let ansexp = ans.iter().zip(exp);
-        for (ref ans, ref expected) in ansexp {
-            assert_eq!(ans.unwrap(), expected.unwrap());
-        }
+        assert_vec_eq(ans, expected);
     }
 
     #[test]
     fn best_partitioning_works_for_overflow() {
         let ans = best_partitioning(2, 7, 4);
-        let expected = vec![
-            Some(Partition{from:2, delta:2}),
-            Some(Partition{from:3, delta:2}),
-            Some(Partition{from:3, delta:1}),
-            None
-        ];
+        let expected = vec![Some(Partition {
+                                from: 2,
+                                delta: 2,
+                            }),
+                            Some(Partition {
+                                from: 3,
+                                delta: 2,
+                            }),
+                            Some(Partition {
+                                from: 3,
+                                delta: 1,
+                            }),
+                            None];
 
-        let ansexp = ans.iter().zip(expected);
-        for (ref ans, ref expected) in ansexp {
-            assert_eq!(ans.unwrap(), expected.unwrap());
+        assert_vec_eq(ans, expected);
+    }
+
+    fn assert_vec_eq<T>(vec1: Vec<T>, vec2: Vec<T>)
+        where T: Clone + Debug + PartialEq
+    {
+        let zip = vec1.iter().cloned().zip(vec2.clone());
+        for (e1, e2) in zip {
+            assert_eq!(e1, e2);
         }
     }
 
+    #[test]
+    fn best_max_for_sieve_works_for_2() {
+        let ans = best_max_for_sieve(2, 100);
+        assert_eq!(ans, 4)
+    }
+
+    #[test]
+    fn best_max_for_sieve_works_for_trivial() {
+        let ans = best_max_for_sieve(11, 500);
+        assert_eq!(ans, 121)
+    }
+
+    #[test]
+    fn best_max_for_sieve_works_for_max() {
+        let ans = best_max_for_sieve(11, 100);
+        assert_eq!(ans, 121)
+    }
 }

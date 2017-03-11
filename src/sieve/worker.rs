@@ -1,6 +1,7 @@
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
 use std::sync::Arc;
+use std::fmt::{Display, Result as FmtResult, Formatter};
 use sieve::math::{find_candidates, sieve_page, MathError, Partition};
 
 pub type ArcVec = Arc<Vec<u64>>;
@@ -64,3 +65,25 @@ fn worker(send: Sender<MsgFromWorker>, rec: Receiver<MsgToWorker>) {
 }
 
 fn cleanup() {}
+
+
+impl Display for MsgToWorker {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match self {
+            &MsgToWorker::FindCandidates(_, _) => write!(f, "FindCandidates(...)"),
+            &MsgToWorker::Sieve(_, _) => write!(f, "Sieve(...)"),
+            &MsgToWorker::Stop => write!(f, "Stop"),
+        }
+    }
+}
+
+impl Display for MsgFromWorker {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match self {
+            &MsgFromWorker::CandidatesResult(_) => write!(f, "CandidatesResult(...)"),
+            &MsgFromWorker::SieveResult(_) => write!(f, "SieveResult(...)"),
+            &MsgFromWorker::Error(_) => write!(f, "Error(...)"),
+            &MsgFromWorker::Ok => write!(f, "Ok"),
+        }
+    }
+}
